@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unauthorized · Nova</title>
+  <link rel="icon" href="../assets/nova-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body class="orbit-bg">
+  <div class="page-root auth-page">
+    <div class="auth-card text-center">
+      <div style="font-size: 3.5rem; margin-bottom: var(--space-4);">🔒</div>
+      <h2 style="margin-bottom: var(--space-3);">Access restricted</h2>
+      <p class="text-muted" style="margin-bottom: var(--space-8);">You don't have permission to view this page.</p>
+      <a href="#" id="home-link" class="btn btn-primary">Back to Nova</a>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script>
+    $(() => {
+      $('#home-link').attr('href', isLoggedIn() ? (isAdmin() ? 'admin/dashboard.html' : 'feed.html') : 'login.html');
+    });
+  </script>
+</body>
+</html>

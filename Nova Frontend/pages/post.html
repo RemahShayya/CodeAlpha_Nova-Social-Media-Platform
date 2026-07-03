@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Post · Nova</title>
+  <link rel="icon" href="../assets/nova-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+  <header id="app-navbar"></header>
+
+  <main class="main-content page-root">
+    <div id="post-container"></div>
+
+    <section id="comments-section" class="hidden">
+      <h3 style="margin-bottom: var(--space-2);">Comments</h3>
+      <div id="comments-list"></div>
+
+      <!-- Users only — admins can't comment -->
+      <form id="comment-form" class="comment-form hidden" novalidate>
+        <img class="avatar avatar-sm" id="my-avatar" src="" alt="">
+        <div style="flex:1">
+          <textarea id="comment-content" maxlength="600" placeholder="Add a comment…"></textarea>
+          <div class="char-counter" id="comment-counter"></div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">Post</button>
+      </form>
+    </section>
+  </main>
+
+  <div id="app-bottomnav"></div>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/validation.js"></script>
+  <script src="../js/posts.js"></script>
+  <script src="../js/comments.js"></script>
+  <script>
+    $(() => {
+      if (!requireAuth()) return;
+      renderNavbar('');
+      initPostHandlers();
+
+      const postId = getQueryParam('id');
+      const $postWrap = $('#post-container');
+      const $commentsList = $('#comments-list');
+
+      if (!postId) {
+        $postWrap.html(emptyStateHtml('⚠️', 'Post not found', 'This link is missing a post id.'));
+        return;
+      }
+
+      showSkeletonCards($postWrap, 1, 'post');
+
+      apiGetPost(postId)
+        .then((post) => {
+          // Single-post endpoint returns no author include — fetch it,
+          // falling back to the cached session user for own posts.
+          if (post.userId === currentUserId()) {
+            return { post, author: getUser() };
+          }
+          return apiGetUser(post.userId)
+            .then((author) => ({ post, author }))
+            .catch(() => ({ post, author: null }));
+        })
+        .then(({ post, author }) => {
+          post.user = author
+            ? { id: author.id, name: author.name, profilePicture: author.profilePicture }
+            : null;
+
+          const $card = $(renderPostCard(post));
+          // On the post page, media shouldn't link back to itself.
+          $card.find('.post-media').removeAttr('href').css('cursor', 'default');
+          $postWrap.html($card);
+          hydratePostCard($card);
+
+          // Comments
+          $('#comments-section').removeClass('hidden');
+          loadComments(postId, $commentsList);
+          initCommentHandlers(postId, $commentsList, (delta) => {
+            const $count = $card.find('.comment-count');
+            const cur = parseInt($count.text(), 10) || 0;
+            $count.text(Math.max(0, cur + delta) || '');
+          });
+
+          if (isUser()) {
+            $('#comment-form').removeClass('hidden');
+            $('#my-avatar').attr('src', avatarUrl(getUser().profilePicture));
+            bindCharCounter($('#comment-content'), $('#comment-counter'), 500);
+          }
+        })
+        .catch((err) => {
+          $postWrap.html(emptyStateHtml('🔭', 'Post not available',
+            err.status === 404
+              ? 'This post may have been deleted, or its author is not available to you.'
+              : err.message,
+            '<a href="feed.html" class="btn btn-primary">Back to feed</a>'));
+        });
+
+      // Create comment
+      $('#comment-form').on('submit', function (e) {
+        e.preventDefault();
+        const $content = $('#comment-content');
+        const content = $content.val().trim();
+        if (!content) { showToast('Comment cannot be empty.', 'error'); return; }
+        if (content.length > 500) { showToast('Comment cannot exceed 500 characters.', 'error'); return; }
+
+        const $btn = $(this).find('button[type=submit]');
+        btnLoading($btn, true);
+
+        apiCreateComment(postId, content)
+          .then(() => {
+            $content.val('').trigger('input');
+            return loadComments(postId, $commentsList);
+          })
+          .then(() => {
+            const $count = $('#post-container .comment-count');
+            const cur = parseInt($count.text(), 10) || 0;
+            $count.text(cur + 1);
+          })
+          .catch((err) => showToast(err.message, 'error'))
+          .finally(() => btnLoading($btn, false));
+      });
+    });
+  </script>
+</body>
+</html>

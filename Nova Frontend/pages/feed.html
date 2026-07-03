@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home · Nova</title>
+  <link rel="icon" href="../assets/nova-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+  <header id="app-navbar"></header>
+
+  <main class="main-content page-root">
+    <div id="feed-container"></div>
+    <div class="load-more-wrap">
+      <button id="load-more" class="btn btn-secondary" style="display:none">Load more</button>
+    </div>
+  </main>
+
+  <div id="app-bottomnav"></div>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/validation.js"></script>
+  <script src="../js/posts.js"></script>
+  <script>
+    $(() => {
+      if (!requireAuth()) return;
+      // Admins have no feed — send them to the panel.
+      if (isAdmin()) { window.location.href = 'admin/dashboard.html'; return; }
+
+      renderNavbar('feed');
+      initPostHandlers();
+
+      const empty = emptyStateHtml('🌌', "Your feed is empty",
+        "You're not following anyone yet. Find people to follow and their posts will appear here.",
+        '<a href="search.html" class="btn btn-primary">Find people</a>');
+
+      const loader = createPostListLoader(
+        $('#feed-container'), $('#load-more'),
+        (page) => apiGetFeed(page, 10), empty
+      );
+      loader.loadNext();
+      $('#load-more').on('click', loader.loadNext);
+    });
+  </script>
+</body>
+</html>

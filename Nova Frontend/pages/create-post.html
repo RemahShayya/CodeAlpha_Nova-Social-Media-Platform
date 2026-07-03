@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create post · Nova</title>
+  <link rel="icon" href="../assets/nova-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+  <header id="app-navbar"></header>
+
+  <main class="main-content page-root">
+    <h1 class="page-title">Create post</h1>
+
+    <form id="create-post-form" novalidate>
+      <div class="form-group">
+        <div class="dropzone" id="dropzone">
+          <div class="dz-icon">🖼️</div>
+          <div>Drag &amp; drop media here, or click to browse</div>
+          <div class="dz-hint">JPEG, PNG, WebP, MP4 or MOV · up to 20MB</div>
+        </div>
+        <div class="media-preview hidden" id="media-preview"></div>
+        <input type="file" id="media-input" class="hidden"
+               accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime">
+        <div class="field-error" id="media-error"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="caption">Caption <span class="text-muted">(optional)</span></label>
+        <textarea id="caption" maxlength="1200" placeholder="Say something about it…"></textarea>
+        <div class="char-counter" id="caption-counter"></div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block">Share post</button>
+    </form>
+  </main>
+
+  <div id="app-bottomnav"></div>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/validation.js"></script>
+  <script>
+    $(() => {
+      if (!requireUser()) return;
+      renderNavbar('create');
+      bindCharCounter($('#caption'), $('#caption-counter'), 1000);
+
+      let selectedFile = null;
+      const $dz = $('#dropzone');
+      const $input = $('#media-input');
+      const $preview = $('#media-preview');
+      const $mediaError = $('#media-error');
+
+      const setFile = (file) => {
+        $mediaError.hide().text('');
+        const err = validateMediaFile(file, 20);
+        if (err) { $mediaError.text(err).show(); return; }
+
+        selectedFile = file;
+        const url = URL.createObjectURL(file);
+        const isVideo = file.type.startsWith('video/');
+        $preview.html(
+          (isVideo
+            ? '<video controls src="' + url + '"></video>'
+            : '<img src="' + url + '" alt="Preview">') +
+          '<button type="button" class="remove-media" aria-label="Remove media">&times;</button>'
+        ).removeClass('hidden');
+        $dz.addClass('hidden');
+      };
+
+      const clearFile = () => {
+        selectedFile = null;
+        $input.val('');
+        $preview.empty().addClass('hidden');
+        $dz.removeClass('hidden');
+      };
+
+      $dz.on('click', () => $input.trigger('click'));
+      $input.on('change', function () { if (this.files[0]) setFile(this.files[0]); });
+
+      $dz.on('dragover dragenter', (e) => { e.preventDefault(); $dz.addClass('dragover'); });
+      $dz.on('dragleave drop', (e) => { e.preventDefault(); $dz.removeClass('dragover'); });
+      $dz.on('drop', (e) => {
+        const file = e.originalEvent.dataTransfer.files[0];
+        if (file) setFile(file);
+      });
+
+      $preview.on('click', '.remove-media', clearFile);
+
+      $('#create-post-form').on('submit', function (e) {
+        e.preventDefault();
+        $mediaError.hide().text('');
+
+        if (!selectedFile) { $mediaError.text('Post media is required.').show(); return; }
+        const caption = $('#caption').val();
+        if (caption.length > 1000) { showToast('Caption cannot exceed 1000 characters.', 'error'); return; }
+
+        // Backend multer expects the file under the exact field name "media".
+        const formData = new FormData();
+        formData.append('media', selectedFile);
+        if (caption.trim()) formData.append('caption', caption.trim());
+
+        const $btn = $(this).find('button[type=submit]');
+        btnLoading($btn, true);
+
+        apiCreatePost(formData)
+          .then((post) => {
+            showToast('Post shared!', 'success');
+            window.location.href = 'post.html?id=' + post.id;
+          })
+          .catch((err) => {
+            btnLoading($btn, false);
+            showToast(err.message, 'error');
+          });
+      });
+    });
+  </script>
+</body>
+</html>

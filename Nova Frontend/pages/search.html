@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search · Nova</title>
+  <link rel="icon" href="../assets/nova-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+  <header id="app-navbar"></header>
+
+  <main class="main-content page-root">
+    <h1 class="page-title">Search</h1>
+
+    <div class="search-bar-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="search-input" placeholder="Search people or posts…" autocomplete="off">
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="users">People</button>
+      <button class="tab" data-tab="posts">Posts</button>
+    </div>
+
+    <div id="results-container">
+      <div class="empty-state">
+        <div class="empty-icon">🔭</div>
+        <h3>Search Nova</h3>
+        <p>Find people by name or posts by caption.</p>
+      </div>
+    </div>
+    <div class="load-more-wrap">
+      <button id="load-more" class="btn btn-secondary" style="display:none">Load more</button>
+    </div>
+  </main>
+
+  <div id="app-bottomnav"></div>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/validation.js"></script>
+  <script src="../js/posts.js"></script>
+  <script src="../js/users.js"></script>
+  <script>
+    $(() => {
+      if (!requireAuth()) return;
+      renderNavbar('search');
+      initPostHandlers();
+      initUserHandlers();
+
+      const $results = $('#results-container');
+      const $loadMore = $('#load-more');
+      let activeTab = 'users';
+      let page = 0, total = 0, pageSize = 10, loading = false;
+      let query = '';
+      let myFollowing = new Set();
+
+      if (isUser()) getMyFollowingIds().then((set) => { myFollowing = set; });
+
+      const maxLen = () => (activeTab === 'users' ? 50 : 1000);
+
+      const runSearch = (reset) => {
+        if (loading) return;
+        query = $('#search-input').val().trim();
+
+        if (!query) {
+          $results.html(emptyStateHtml('🔭', 'Search Nova', 'Find people by name or posts by caption.'));
+          $loadMore.hide();
+          return;
+        }
+        if (query.length > maxLen()) {
+          $results.html(emptyStateHtml('⚠️', 'Query too long',
+            'Keep it under ' + maxLen() + ' characters.'));
+          $loadMore.hide();
+          return;
+        }
+
+        loading = true;
+        const next = reset ? 1 : page + 1;
+        if (reset) showSkeletonCards($results, 3, activeTab === 'users' ? 'user' : 'post');
+        btnLoading($loadMore, true);
+
+        const call = activeTab === 'users'
+          ? apiSearchUsers(query, next, 10)
+          : apiSearchPosts(query, next, 10);
+
+        call.then((res) => {
+          if (reset) $results.empty();
+          page = res.page; total = res.total; pageSize = res.pageSize;
+
+          if (total === 0) {
+            $results.html(emptyStateHtml('🕳️',
+              activeTab === 'users' ? 'No people found' : 'No posts found',
+              'Try a different search.'));
+            $loadMore.hide();
+            return;
+          }
+
+          if (activeTab === 'users') {
+            res.users.forEach((u) => {
+              $results.append(renderUserCard(u, myFollowing.has(u.id) ? 'following' : 'not-following'));
+            });
+          } else {
+            res.posts.forEach((post) => {
+              const $card = $(renderPostCard(post));
+              $results.append($card);
+              hydratePostCard($card);
+            });
+          }
+          $loadMore.toggle(page * pageSize < total);
+        }).catch((err) => {
+          if (reset) $results.empty();
+          showToast(err.message, 'error');
+        }).finally(() => {
+          loading = false;
+          btnLoading($loadMore, false);
+        });
+      };
+
+      // 400ms debounce — don't hit the API on every keystroke.
+      $('#search-input').on('input', debounce(() => runSearch(true), 400));
+
+      $('.tab').on('click', function () {
+        $('.tab').removeClass('active');
+        $(this).addClass('active');
+        activeTab = $(this).data('tab');
+        runSearch(true);
+      });
+
+      $loadMore.on('click', () => runSearch(false));
+    });
+  </script>
+</body>
+</html>

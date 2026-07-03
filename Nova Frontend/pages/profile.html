@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile · Nova</title>
+  <link rel="icon" href="../assets/nova-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+  <header id="app-navbar"></header>
+
+  <main class="main-content page-root">
+    <div id="profile-container"></div>
+    <div id="posts-grid-wrap" class="hidden">
+      <h3 style="margin: var(--space-6) 0 var(--space-4);">Posts</h3>
+      <div class="posts-grid" id="posts-grid"></div>
+      <div class="load-more-wrap">
+        <button id="load-more" class="btn btn-secondary" style="display:none">Load more</button>
+      </div>
+    </div>
+  </main>
+
+  <div id="app-bottomnav"></div>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/validation.js"></script>
+  <script src="../js/users.js"></script>
+  <script>
+    $(() => {
+      if (!requireAuth()) return;
+      renderNavbar('profile');
+      initUserHandlers();
+
+      const viewId = getQueryParam('id') || currentUserId();
+      const own = viewId === currentUserId();
+      const $wrap = $('#profile-container');
+
+      showSkeletonCards($wrap, 1, 'user');
+
+      // For own profile use /me (works for both roles); the public
+      // endpoint 404s on admin targets, so counts are user-role only.
+      const fetchProfile = own && isAdmin()
+        ? apiGetMe().then((u) => ({ ...u, followerCount: 0, followingCount: 0 }))
+        : apiGetUser(viewId);
+
+      const fetchFollowState = (own || !isUser())
+        ? Promise.resolve(null)
+        : getMyFollowingIds().then((set) => (set.has(viewId) ? 'following' : 'not-following'));
+
+      Promise.all([fetchProfile, fetchFollowState])
+        .then(([user, followState]) => {
+          renderProfile(user, followState);
+          loadPostsGrid();
+        })
+        .catch((err) => {
+          // 404 = deleted, admin, or a block in either direction. Offer
+          // unblock as a recovery path — server 404s if no block existed.
+          $wrap.html(emptyStateHtml('🔭', 'User not available',
+            'This account may not exist, or it isn\'t available to you.',
+            (isUser() && !own
+              ? '<button id="try-unblock" class="btn btn-secondary">I blocked them — unblock</button> '
+              : '') +
+            '<a href="feed.html" class="btn btn-primary">Back to feed</a>'));
+
+          $('#try-unblock').on('click', () => {
+            apiUnblockUser(viewId)
+              .then(() => { showToast('User unblocked.', 'success'); window.location.reload(); })
+              .catch((e) => showToast(e.message, 'error'));
+          });
+        });
+
+      const renderProfile = (user, followState) => {
+        let actions = '';
+        if (own) {
+          actions =
+            '<a href="edit-profile.html" class="btn btn-secondary btn-sm">Edit profile</a>';
+        } else if (isUser()) {
+          const followBtn = followState === 'following'
+            ? '<button class="btn btn-secondary btn-sm follow-toggle" data-following="true">Following</button>'
+            : '<button class="btn btn-primary btn-sm follow-toggle" data-following="false">Follow</button>';
+          actions = followBtn +
+            '<button class="btn btn-danger btn-sm" id="block-btn">Block</button>';
+        }
+        // Admins viewing a profile: read-only, no actions.
+
+        $wrap.html(
+          '<div class="profile-header" data-user-id="' + user.id + '">' +
+            '<img class="avatar avatar-lg" src="' + avatarUrl(user.profilePicture) + '" alt="">' +
+            '<div class="profile-info">' +
+              '<h1 class="profile-name">' + escapeHtml(user.name) + '</h1>' +
+              (user.bio ? '<p class="profile-bio">' + escapeHtml(user.bio) + '</p>' : '') +
+              '<div class="profile-stats">' +
+                '<a class="profile-stat" href="followers.html?id=' + user.id + '"><b>' + (user.followerCount ?? 0) + '</b> followers</a>' +
+                '<a class="profile-stat" href="following.html?id=' + user.id + '"><b>' + (user.followingCount ?? 0) + '</b> following</a>' +
+              '</div>' +
+              '<div class="profile-actions">' + actions + '</div>' +
+            '</div>' +
+          '</div>'
+        );
+
+        $('#block-btn').on('click', () => {
+          confirmDialog('Block ' + user.name,
+            'They won\'t see your posts and you won\'t see theirs. Any follows between you are removed.',
+            'Block', () => {
+              apiBlockUser(user.id)
+                .then(() => { showToast('User blocked.', 'success'); window.location.href = 'feed.html'; })
+                .catch((err) => showToast(err.message, 'error'));
+            });
+        });
+      };
+
+      // Posts grid (paginated)
+      let page = 0, total = 0, pageSize = 12, loading = false;
+      const loadPostsGrid = () => {
+        if (loading) return;
+        loading = true;
+        const next = page + 1;
+        btnLoading($('#load-more'), true);
+
+        apiGetUserPosts(viewId, next, pageSize)
+          .then((res) => {
+            $('#posts-grid-wrap').removeClass('hidden');
+            page = res.page; total = res.total; pageSize = res.pageSize;
+
+            if (total === 0) {
+              $('#posts-grid').html('');
+              $('#posts-grid-wrap').append(emptyStateHtml('📷', 'No posts yet',
+                own ? 'Share your first post to get started.' : ''));
+              $('#load-more').hide();
+              return;
+            }
+
+            res.posts.forEach((post) => {
+              const thumb = post.mediaType === 'video'
+                ? '<video src="' + mediaUrl(post.mediaUrl) + '" preload="metadata" muted></video><span class="grid-video-badge">▶</span>'
+                : '<img src="' + mediaUrl(post.mediaUrl) + '" alt="" loading="lazy">';
+              $('#posts-grid').append('<a href="post.html?id=' + post.id + '">' + thumb + '</a>');
+            });
+            $('#load-more').toggle(page * pageSize < total);
+          })
+          .catch(() => { /* grid failure is non-fatal on a visible profile */ })
+          .finally(() => { loading = false; btnLoading($('#load-more'), false); });
+      };
+      $('#load-more').on('click', loadPostsGrid);
+    });
+  </script>
+</body>
+</html>

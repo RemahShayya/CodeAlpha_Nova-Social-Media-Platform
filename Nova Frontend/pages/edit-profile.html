@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit profile · Nova</title>
+  <link rel="icon" href="../assets/nova-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+  <header id="app-navbar"></header>
+
+  <main class="main-content page-root">
+    <h1 class="page-title">Edit profile</h1>
+
+    <form id="edit-form" class="card" novalidate>
+      <div class="pfp-edit">
+        <img class="avatar avatar-lg" id="pfp-preview" src="" alt="Profile picture" title="Click to change">
+        <div>
+          <button type="button" class="btn btn-secondary btn-sm" id="change-pfp">Change picture</button>
+          <button type="button" class="btn btn-danger btn-sm hidden" id="remove-pfp">Remove picture</button>
+          <div class="dz-hint" style="margin-top: var(--space-2); font-size: var(--font-size-xs); color: var(--color-text-faint);">
+            JPEG, PNG or WebP · up to 2MB
+          </div>
+        </div>
+        <input type="file" id="pfp-input" class="hidden" accept="image/jpeg,image/png,image/webp">
+      </div>
+      <div class="field-error" id="pfp-error" style="margin-bottom: var(--space-4);"></div>
+
+      <div class="form-group">
+        <label for="name">Name</label>
+        <input type="text" id="name" maxlength="50" placeholder="Your name">
+        <div class="field-error"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="bio">Bio</label>
+        <textarea id="bio" maxlength="200" placeholder="Tell people about yourself"></textarea>
+        <div class="char-counter" id="bio-counter"></div>
+        <div class="field-error"></div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block">Save changes</button>
+    </form>
+  </main>
+
+  <div id="app-bottomnav"></div>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/validation.js"></script>
+  <script>
+    $(() => {
+      if (!requireAuth()) return;
+      renderNavbar('profile');
+      bindCharCounter($('#bio'), $('#bio-counter'), 160);
+
+      let newPicture = null;
+
+      // Pre-fill from the server, not the cache — the cache can be stale.
+      showSpinner();
+      apiGetMe()
+        .then((user) => {
+          $('#name').val(user.name || '');
+          $('#bio').val(user.bio || '').trigger('input');
+          $('#pfp-preview').attr('src', avatarUrl(user.profilePicture));
+          if (user.profilePicture) $('#remove-pfp').removeClass('hidden');
+          updateStoredUser(user);
+        })
+        .catch((err) => showToast(err.message, 'error'))
+        .finally(hideSpinner);
+
+      // Picture selection + preview
+      $('#change-pfp, #pfp-preview').on('click', () => $('#pfp-input').trigger('click'));
+      $('#pfp-input').on('change', function () {
+        const file = this.files[0];
+        if (!file) return;
+        $('#pfp-error').hide().text('');
+        const err = validateImageFile(file, 2);
+        if (err) { $('#pfp-error').text(err).show(); this.value = ''; return; }
+        newPicture = file;
+        $('#pfp-preview').attr('src', URL.createObjectURL(file));
+      });
+
+      // Remove picture — separate endpoint, immediate
+      $('#remove-pfp').on('click', function () {
+        confirmDialog('Remove profile picture', 'Your picture will be deleted.', 'Remove', () => {
+          apiDeleteProfilePicture()
+            .then(() => {
+              newPicture = null;
+              $('#pfp-input').val('');
+              $('#pfp-preview').attr('src', avatarUrl(null));
+              $('#remove-pfp').addClass('hidden');
+              const u = getUser(); if (u) { u.profilePicture = null; updateStoredUser(u); }
+              showToast('Profile picture removed.', 'success');
+            })
+            .catch((err) => showToast(err.message, 'error'));
+        });
+      });
+
+      // Save
+      $('#edit-form').on('submit', function (e) {
+        e.preventDefault();
+        const $form = $(this);
+        clearAllErrors($form);
+
+        const $name = $('#name');
+        const $bio = $('#bio');
+
+        const ok = [
+          validateRequired($name, 'Name'),
+          validateMaxLength($name, 50, 'Name'),
+          validateMaxLength($bio, 160, 'Bio'),
+        ].every(Boolean);
+        if (!ok) return;
+
+        // Multer expects the file under the exact field name "profilePicture".
+        const formData = new FormData();
+        formData.append('name', $name.val().trim());
+        formData.append('bio', $bio.val());
+        if (newPicture) formData.append('profilePicture', newPicture);
+
+        const $btn = $form.find('button[type=submit]');
+        btnLoading($btn, true);
+
+        apiUpdateMe(formData)
+          .then((user) => {
+            updateStoredUser(user);
+            showToast('Profile updated.', 'success');
+            window.location.href = 'profile.html';
+          })
+          .catch((err) => {
+            btnLoading($btn, false);
+            showToast(err.message, 'error');
+          });
+      });
+    });
+  </script>
+</body>
+</html>

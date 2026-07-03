@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Following · Nova</title>
+  <link rel="icon" href="../assets/nova-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+  <header id="app-navbar"></header>
+
+  <main class="main-content page-root">
+    <h1 class="page-title">Following</h1>
+    <div id="list-container"></div>
+  </main>
+
+  <div id="app-bottomnav"></div>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/users.js"></script>
+  <script>
+    $(() => {
+      if (!requireAuth()) return;
+      renderNavbar('');
+      initUserHandlers();
+
+      const targetId = getQueryParam('id') || currentUserId();
+      const own = targetId === currentUserId();
+      const $list = $('#list-container');
+      showSkeletonCards($list, 3, 'user');
+
+      Promise.all([apiGetFollowing(targetId), getMyFollowingIds()])
+        .then(([following, followingSet]) => {
+          if (!following.length) {
+            $list.html(emptyStateHtml('🧭', 'Not following anyone yet',
+              own ? 'Find people to follow and their posts will fill your feed.' : '',
+              own ? '<a href="search.html" class="btn btn-primary">Find people</a>' : ''));
+            return;
+          }
+          $list.html(following.map((u) =>
+            // On your own following page everyone is followed by definition.
+            renderUserCard(u, own || followingSet.has(u.id) ? 'following' : 'not-following')
+          ).join(''));
+        })
+        .catch((err) => {
+          $list.html(emptyStateHtml('🔭', 'Not available', err.message,
+            '<a href="feed.html" class="btn btn-primary">Back to feed</a>'));
+        });
+    });
+  </script>
+</body>
+</html>

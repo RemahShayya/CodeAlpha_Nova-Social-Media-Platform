@@ -1,0 +1,83 @@
+/* ============================================================
+   Nova — Design Tokens
+   Palette derived from the Nova logo: deep space navy,
+   violet→cyan orbital gradient, white-glow display type.
+   ============================================================ */
+
+:root {
+  /* Brand */
+  --nova-violet: #8B5CF6;
+  --nova-violet-deep: #6D3EF2;
+  --nova-cyan: #38C8F5;
+  --nova-gradient: linear-gradient(100deg, var(--nova-violet) 0%, var(--nova-cyan) 100%);
+
+  /* Surfaces */
+  --color-bg: #0A0A1C;              /* page background — logo navy */
+  --color-bg-deep: #060612;         /* deepest layer, behind orbits */
+  --color-surface: #12122A;         /* cards */
+  --color-surface-2: #1A1A38;      /* elevated: modals, dropdowns, inputs */
+  --color-border: #26264A;
+  --color-border-focus: var(--nova-violet);
+
+  /* Text */
+  --color-text: #F2F2FA;
+  --color-text-muted: #8E8EB2;
+  --color-text-faint: #5A5A80;
+
+  /* Semantic */
+  --color-primary: var(--nova-violet);
+  --color-primary-hover: var(--nova-violet-deep);
+  --color-success: #2FD879;
+  --color-error: #FF5C7A;
+  --color-info: var(--nova-cyan);
+  --color-like: #FF5C7A;
+
+  /* Skeleton */
+  --color-skeleton-base: #16162E;
+  --color-skeleton-shine: #22224A;
+
+  /* Type */
+  --font-display: 'Sora', 'Inter', -apple-system, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.375rem;
+  --font-size-2xl: 1.75rem;
+  --font-size-3xl: 2.25rem;
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* Radius */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.25rem;
+  --radius-full: 9999px;
+
+  /* Shadows / glow */
+  --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 14px 44px rgba(0, 0, 0, 0.6);
+  --glow-violet: 0 0 24px rgba(139, 92, 246, 0.35);
+  --glow-cyan: 0 0 24px rgba(56, 200, 245, 0.3);
+
+  /* Motion */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 420ms cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Layout */
+  --content-max: 640px;
+  --nav-height: 64px;
+  --bottomnav-height: 60px;
+}

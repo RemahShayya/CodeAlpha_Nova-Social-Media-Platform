@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin · Nova</title>
+  <link rel="icon" href="../../assets/nova-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/variables.css">
+  <link rel="stylesheet" href="../../css/base.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <link rel="stylesheet" href="../../css/layout.css">
+  <link rel="stylesheet" href="../../css/pages.css">
+  <link rel="stylesheet" href="../../css/responsive.css">
+</head>
+<body>
+  <header id="app-navbar"></header>
+
+  <main class="main-content wide page-root">
+    <h1 class="page-title">Admin dashboard</h1>
+    <div id="admin-tabs"></div>
+
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-4);">
+      <a href="users.html" class="card" style="display:block;">
+        <div style="font-size:2rem; margin-bottom: var(--space-3);">👥</div>
+        <h3 style="margin-bottom: var(--space-2);">Users</h3>
+        <p class="text-muted" style="font-size: var(--font-size-sm);">Search users, deactivate accounts, restore deactivated accounts by ID.</p>
+      </a>
+      <a href="posts.html" class="card" style="display:block;">
+        <div style="font-size:2rem; margin-bottom: var(--space-3);">🖼️</div>
+        <h3 style="margin-bottom: var(--space-2);">Posts</h3>
+        <p class="text-muted" style="font-size: var(--font-size-sm);">Search posts by caption and remove any post along with its media.</p>
+      </a>
+      <a href="comments.html" class="card" style="display:block;">
+        <div style="font-size:2rem; margin-bottom: var(--space-3);">💬</div>
+        <h3 style="margin-bottom: var(--space-2);">Comments</h3>
+        <p class="text-muted" style="font-size: var(--font-size-sm);">Moderate comments from any post's page.</p>
+      </a>
+      <a href="create-admin.html" class="card" style="display:block;">
+        <div style="font-size:2rem; margin-bottom: var(--space-3);">🛡️</div>
+        <h3 style="margin-bottom: var(--space-2);">Create admin</h3>
+        <p class="text-muted" style="font-size: var(--font-size-sm);">Add a new administrator account.</p>
+      </a>
+    </div>
+  </main>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="../../js/config.js"></script>
+  <script src="../../js/auth.js"></script>
+  <script src="../../js/utils.js"></script>
+  <script src="../../js/ui.js"></script>
+  <script src="../../js/api.js"></script>
+  <script src="../../js/admin.js"></script>
+  <script>
+    $(() => {
+      if (!requireAdmin()) return;
+      renderAdminNav('dashboard');
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Users · Nova Admin</title>
+  <link rel="icon" href="../../assets/nova-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/variables.css">
+  <link rel="stylesheet" href="../../css/base.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <link rel="stylesheet" href="../../css/layout.css">
+  <link rel="stylesheet" href="../../css/pages.css">
+  <link rel="stylesheet" href="../../css/responsive.css">
+  <style>
+    .admin-header {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-5);
+    }
+    .admin-header .btn:hover {
+      border-color: var(--nova-violet);
+      box-shadow: var(--glow-violet);
+    }
+    .result-count {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-4);
+    }
+    .result-count b { color: var(--nova-cyan); font-family: var(--font-display); }
+  </style>
+</head>
+<body class="orbit-bg">
+  <header id="app-navbar"></header>
+
+  <main class="main-content wide page-root">
+    <div class="admin-header">
+      <h1 class="page-title" style="margin-bottom:0">User <span class="gradient-text">management</span></h1>
+      <a href="deactivated-users.html" class="btn btn-secondary btn-sm">🗂 View deactivated users</a>
+    </div>
+
+    <div id="admin-tabs"></div>
+
+    <div class="search-bar-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="user-search" placeholder="Search users by name…" autocomplete="off">
+    </div>
+
+    <div class="result-count hidden" id="result-count"></div>
+
+    <div id="users-container">
+      <div class="empty-state">
+        <div class="empty-icon">👥</div>
+        <h3>Search for a user</h3>
+        <p>Type a name to find active accounts. Deactivated accounts live in their own list.</p>
+      </div>
+    </div>
+    <div class="load-more-wrap">
+      <button id="load-more" class="btn btn-secondary" style="display:none">Load more</button>
+    </div>
+  </main>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="../../js/config.js"></script>
+  <script src="../../js/auth.js"></script>
+  <script src="../../js/utils.js"></script>
+  <script src="../../js/ui.js"></script>
+  <script src="../../js/api.js"></script>
+  <script src="../../js/admin.js"></script>
+  <script>
+    $(() => {
+      if (!requireAdmin()) return;
+      renderAdminNav('users');
+      initAdminHandlers();
+
+      const $results = $('#users-container');
+      const $loadMore = $('#load-more');
+      const $count = $('#result-count');
+      let page = 0, total = 0, pageSize = 20, loading = false;
+
+      const runSearch = (reset) => {
+        if (loading) return;
+        const q = $('#user-search').val().trim();
+        if (!q) {
+          $results.html(emptyStateHtml('👥', 'Search for a user', 'Type a name to find active accounts.'));
+          $loadMore.hide(); $count.addClass('hidden');
+          return;
+        }
+        if (q.length > 50) return;
+
+        loading = true;
+        const next = reset ? 1 : page + 1;
+        if (reset) { showSkeletonCards($results, 3, 'user'); $count.addClass('hidden'); }
+        btnLoading($loadMore, true);
+
+        apiSearchUsers(q, next, 20)
+          .then((res) => {
+            if (reset) $results.empty();
+            page = res.page; total = res.total; pageSize = res.pageSize;
+
+            if (total === 0) {
+              $results.html(emptyStateHtml('🕳️', 'No users found', 'No active accounts match that name.'));
+              $loadMore.hide(); $count.addClass('hidden');
+              return;
+            }
+            $count.html('<b>' + total + '</b> user' + (total === 1 ? '' : 's') + ' found').removeClass('hidden');
+            res.users.forEach((u) => $results.append(renderAdminUserRow(u)));
+            $loadMore.toggle(page * pageSize < total);
+          })
+          .catch((err) => { if (reset) $results.empty(); showToast(err.message, 'error'); })
+          .finally(() => { loading = false; btnLoading($loadMore, false); });
+      };
+
+      $('#user-search').on('input', debounce(() => runSearch(true), 400));
+      $loadMore.on('click', () => runSearch(false));
+    });
+  </script>
+</body>
+</html>

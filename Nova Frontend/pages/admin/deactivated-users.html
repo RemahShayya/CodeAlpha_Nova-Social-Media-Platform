@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deactivated users · Nova Admin</title>
+  <link rel="icon" href="../../assets/nova-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/variables.css">
+  <link rel="stylesheet" href="../../css/base.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <link rel="stylesheet" href="../../css/layout.css">
+  <link rel="stylesheet" href="../../css/pages.css">
+  <link rel="stylesheet" href="../../css/responsive.css">
+</head>
+<body>
+  <header id="app-navbar"></header>
+
+  <main class="main-content wide page-root">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-4);">
+      <h1 class="page-title" style="margin-bottom:0">Deactivated users</h1>
+      <a href="users.html" class="btn btn-secondary btn-sm">← Active users</a>
+    </div>
+    <div id="admin-tabs"></div>
+
+    <div class="search-bar-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="deact-search" placeholder="Search by name, or paste a user ID…" autocomplete="off">
+    </div>
+
+    <div id="deact-container"></div>
+    <div class="load-more-wrap">
+      <button id="load-more" class="btn btn-secondary" style="display:none">Load more</button>
+    </div>
+  </main>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="../../js/config.js"></script>
+  <script src="../../js/auth.js"></script>
+  <script src="../../js/utils.js"></script>
+  <script src="../../js/ui.js"></script>
+  <script src="../../js/api.js"></script>
+  <script src="../../js/admin.js"></script>
+  <script>
+    $(() => {
+      if (!requireAdmin()) return;
+      renderAdminNav('users');
+
+      const $results = $('#deact-container');
+      const $loadMore = $('#load-more');
+      let page = 0, total = 0, pageSize = 20, loading = false;
+
+      const renderDeactivatedRow = (user) => {
+        return (
+          '<div class="card user-card" data-user-id="' + user.id + '">' +
+            '<img class="avatar avatar-md" src="' + adminAvatarUrl(user.profilePicture) + '" alt="">' +
+            '<div class="user-card-info">' +
+              '<span style="font-weight:600; color: var(--color-text);">' + escapeHtml(user.name) + '</span>' +
+              '<div class="user-card-bio">' + escapeHtml(user.email || '') + '</div>' +
+              '<div class="user-card-bio" style="font-size: var(--font-size-xs); color: var(--color-text-faint);">' +
+                'Deactivated ' + formatDate(user.deletedAt) + ' · ID: ' + user.id +
+              '</div>' +
+            '</div>' +
+            '<button class="btn btn-primary btn-sm admin-restore">Restore</button>' +
+          '</div>'
+        );
+      };
+
+      const load = (reset) => {
+        if (loading) return;
+        loading = true;
+        const next = reset ? 1 : page + 1;
+        const q = $('#deact-search').val().trim();
+        if (reset) showSkeletonCards($results, 3, 'user');
+        btnLoading($loadMore, true);
+
+        apiGetDeactivatedUsers(q, next, 20)
+          .then((res) => {
+            if (reset) $results.empty();
+            page = res.page; total = res.total; pageSize = res.pageSize;
+
+            if (total === 0) {
+              $results.html(emptyStateHtml('✨',
+                q ? 'No deactivated users match' : 'No deactivated users',
+                q ? 'Try a different name or ID.' : 'Every account is currently active.'));
+              $loadMore.hide();
+              return;
+            }
+            res.users.forEach((u) => $results.append(renderDeactivatedRow(u)));
+            $loadMore.toggle(page * pageSize < total);
+          })
+          .catch((err) => { if (reset) $results.empty(); showToast(err.message, 'error'); })
+          .finally(() => { loading = false; btnLoading($loadMore, false); });
+      };
+
+      // Load all on arrival; refine as the admin types.
+      load(true);
+      $('#deact-search').on('input', debounce(() => load(true), 400));
+      $loadMore.on('click', () => load(false));
+
+      // Restore — no confirm dialog needed; restoring is non-destructive.
+      $(document).on('click', '.admin-restore', function () {
+        const $btn = $(this);
+        const $row = $btn.closest('[data-user-id]');
+        btnLoading($btn, true);
+        apiAdminRestoreUser($row.data('user-id'))
+          .then(() => {
+            $row.slideUp(200, () => {
+              $row.remove();
+              if (!$results.find('.user-card').length) load(true);
+            });
+            showToast('User restored.', 'success');
+          })
+          .catch((err) => { btnLoading($btn, false); showToast(err.message, 'error'); });
+      });
+    });
+  </script>
+</body>
+</html>

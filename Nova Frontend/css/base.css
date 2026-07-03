@@ -1,0 +1,141 @@
+/* ============================================================
+   Nova — Base
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  line-height: 1.55;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+img, video { max-width: 100%; display: block; }
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+h1 { font-size: var(--font-size-3xl); }
+h2 { font-size: var(--font-size-2xl); }
+h3 { font-size: var(--font-size-xl); }
+
+p { color: var(--color-text); }
+
+a {
+  color: var(--nova-cyan);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+a:hover { color: var(--color-text); }
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+input, textarea, select {
+  font-family: inherit;
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  background-color: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  width: 100%;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+input::placeholder, textarea::placeholder { color: var(--color-text-faint); }
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.18);
+}
+
+textarea { resize: vertical; min-height: 96px; }
+
+/* Visible keyboard focus for interactive elements */
+button:focus-visible, a:focus-visible {
+  outline: 2px solid var(--nova-cyan);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+::selection { background: rgba(139, 92, 246, 0.45); color: #fff; }
+
+/* Scrollbar (WebKit) */
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--color-bg); }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: var(--radius-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-faint); }
+
+/* ------------------------------------------------------------
+   Signature: the Nova orbit.
+   A fixed elliptical gradient ring floating behind content —
+   echoes the ring that wraps the N in the logo.
+   Add class "orbit-bg" to <body> on pages that want it.
+   ------------------------------------------------------------ */
+.orbit-bg::before,
+.orbit-bg::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+.orbit-bg::before {
+  width: 130vmax; height: 60vmax;
+  left: 50%; top: 55%;
+  transform: translate(-50%, -50%) rotate(-16deg);
+  border: 2px solid transparent;
+  background:
+    linear-gradient(var(--color-bg), var(--color-bg)) padding-box,
+    linear-gradient(100deg, rgba(139,92,246,0.5), rgba(56,200,245,0.4)) border-box;
+  opacity: 0.35;
+  filter: blur(1px);
+}
+.orbit-bg::after {
+  width: 42vmax; height: 42vmax;
+  left: 78%; top: 8%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(56,200,245,0.14) 0%, transparent 65%);
+}
+
+/* All page content sits above the orbit */
+.page-root { position: relative; z-index: 1; }
+
+/* Utility */
+.text-muted { color: var(--color-text-muted); }
+.text-error { color: var(--color-error); }
+.text-success { color: var(--color-success); }
+.text-center { text-align: center; }
+.hidden { display: none !important; }
+
+.gradient-text {
+  background: var(--nova-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

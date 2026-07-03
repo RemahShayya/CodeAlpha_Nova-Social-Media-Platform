@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Posts · Nova Admin</title>
+  <link rel="icon" href="../../assets/nova-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/variables.css">
+  <link rel="stylesheet" href="../../css/base.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <link rel="stylesheet" href="../../css/layout.css">
+  <link rel="stylesheet" href="../../css/pages.css">
+  <link rel="stylesheet" href="../../css/responsive.css">
+</head>
+<body>
+  <header id="app-navbar"></header>
+
+  <main class="main-content wide page-root">
+    <h1 class="page-title">Post moderation</h1>
+    <div id="admin-tabs"></div>
+
+    <div class="search-bar-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="post-search" placeholder="Search posts by caption…" autocomplete="off">
+    </div>
+
+    <div id="posts-container">
+      <div class="empty-state">
+        <div class="empty-icon">🖼️</div>
+        <h3>Search for a post</h3>
+        <p>Type part of a caption to find posts. Click a result to view it, or remove it directly.</p>
+      </div>
+    </div>
+    <div class="load-more-wrap">
+      <button id="load-more" class="btn btn-secondary" style="display:none">Load more</button>
+    </div>
+  </main>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="../../js/config.js"></script>
+  <script src="../../js/auth.js"></script>
+  <script src="../../js/utils.js"></script>
+  <script src="../../js/ui.js"></script>
+  <script src="../../js/api.js"></script>
+  <script src="../../js/admin.js"></script>
+  <script>
+    $(() => {
+      if (!requireAdmin()) return;
+      renderAdminNav('posts');
+      initAdminHandlers();
+
+      const $results = $('#posts-container');
+      const $loadMore = $('#load-more');
+      let page = 0, total = 0, pageSize = 20, loading = false;
+
+      const runSearch = (reset) => {
+        if (loading) return;
+        const q = $('#post-search').val().trim();
+        if (!q) {
+          $results.html(emptyStateHtml('🖼️', 'Search for a post', 'Type part of a caption to find posts.'));
+          $loadMore.hide();
+          return;
+        }
+
+        loading = true;
+        const next = reset ? 1 : page + 1;
+        if (reset) showSkeletonCards($results, 3, 'user');
+        btnLoading($loadMore, true);
+
+        apiSearchPosts(q, next, 20)
+          .then((res) => {
+            if (reset) $results.empty();
+            page = res.page; total = res.total; pageSize = res.pageSize;
+
+            if (total === 0) {
+              $results.html(emptyStateHtml('🕳️', 'No posts found', 'No captions match that search.'));
+              $loadMore.hide();
+              return;
+            }
+            res.posts.forEach((p) => $results.append(renderAdminPostRow(p)));
+            $loadMore.toggle(page * pageSize < total);
+          })
+          .catch((err) => { if (reset) $results.empty(); showToast(err.message, 'error'); })
+          .finally(() => { loading = false; btnLoading($loadMore, false); });
+      };
+
+      $('#post-search').on('input', debounce(() => runSearch(true), 400));
+      $loadMore.on('click', () => runSearch(false));
+    });
+  </script>
+</body>
+</html>

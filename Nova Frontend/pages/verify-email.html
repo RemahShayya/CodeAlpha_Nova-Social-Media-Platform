@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify email · Nova</title>
+  <link rel="icon" href="../assets/nova-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body class="orbit-bg">
+  <div class="page-root auth-page">
+    <div class="auth-card">
+      <img src="../assets/nova-logo.png" alt="Nova" class="auth-logo">
+
+      <!-- Verifying -->
+      <div id="verify-loading" class="status-panel">
+        <div class="orbit-spinner" style="margin: 0 auto var(--space-5);"></div>
+        <h2>Verifying your email…</h2>
+        <p>Hang tight, this only takes a moment.</p>
+      </div>
+
+      <!-- Success -->
+      <div id="verify-success" class="status-panel hidden">
+        <div class="status-icon">🎉</div>
+        <h2>Email verified</h2>
+        <p>Your account is ready. Log in to start exploring Nova.</p>
+        <a href="login.html" class="btn btn-primary">Go to login</a>
+      </div>
+
+      <!-- Error -->
+      <div id="verify-error" class="status-panel hidden">
+        <div class="status-icon">⚠️</div>
+        <h2>Verification failed</h2>
+        <p id="verify-error-msg">This link may be invalid or expired.</p>
+        <a href="resend-verification.html" class="btn btn-primary">Resend verification email</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/api.js"></script>
+  <script>
+    $(() => {
+      const token = getQueryParam('token');
+
+      if (!token) {
+        $('#verify-loading').addClass('hidden');
+        $('#verify-error-msg').text('This link is missing its verification token.');
+        $('#verify-error').removeClass('hidden');
+        return;
+      }
+
+      apiVerifyEmail(token)
+        .then(() => {
+          $('#verify-loading').addClass('hidden');
+          $('#verify-success').removeClass('hidden');
+        })
+        .catch((err) => {
+          $('#verify-loading').addClass('hidden');
+          $('#verify-error-msg').text(err.message);
+          $('#verify-error').removeClass('hidden');
+        });
+    });
+  </script>
+</body>
+</html>

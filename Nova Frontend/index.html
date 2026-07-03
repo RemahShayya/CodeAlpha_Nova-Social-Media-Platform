@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nova</title>
+  <link rel="icon" href="assets/nova-logo.png">
+  <style>body { background: #0A0A1C; }</style>
+</head>
+<body>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    // Route by session + role.
+    if (!isLoggedIn()) {
+      window.location.replace('pages/login.html');
+    } else if (isAdmin()) {
+      window.location.replace('pages/admin/dashboard.html');
+    } else {
+      window.location.replace('pages/feed.html');
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log in · Nova</title>
+  <link rel="icon" href="../assets/nova-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body class="orbit-bg">
+  <div class="page-root auth-page">
+    <div class="auth-card">
+      <img src="../assets/nova-logo.png" alt="Nova" class="auth-logo">
+      <h1 class="auth-title">Welcome back</h1>
+      <p class="auth-subtitle">Connect. Share. Inspire.</p>
+
+      <form id="login-form" novalidate>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" autocomplete="email" placeholder="you@example.com">
+          <div class="field-error"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="password-wrap">
+            <input type="password" id="password" autocomplete="current-password" placeholder="Your password">
+            <button type="button" class="password-toggle" aria-label="Show password">👁</button>
+          </div>
+          <div class="field-error"></div>
+        </div>
+
+        <div class="auth-divider-row">
+          <label class="checkbox-row">
+            <input type="checkbox" id="remember-me" checked> Remember me
+          </label>
+          <a href="forgot-password.html" style="font-size: var(--font-size-sm);">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Log in</button>
+      </form>
+
+      <!-- Shown only after a 403 (unverified email) -->
+      <div id="verify-hint" class="hidden" style="margin-top: var(--space-5); text-align: center; font-size: var(--font-size-sm); color: var(--color-text-muted);">
+        Your email isn't verified yet.
+        <a href="resend-verification.html">Resend verification email</a>
+      </div>
+
+      <div class="auth-links">
+        Don't have an account? <a href="register.html">Create one</a>
+      </div>
+    </div>
+    <a href="about.html" class="dev-signature">About the developer</a>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/validation.js"></script>
+  <script>
+    $(() => {
+      if (redirectIfLoggedIn()) return;
+      bindPasswordToggles();
+
+      $('#login-form').on('submit', function (e) {
+        e.preventDefault();
+        const $form = $(this);
+        clearAllErrors($form);
+        $('#verify-hint').addClass('hidden');
+
+        const $email = $('#email');
+        const $password = $('#password');
+
+        const ok = [
+          validateEmailField($email),
+          validateRequired($password, 'Password'),
+        ].every(Boolean);
+        if (!ok) return;
+
+        const $btn = $form.find('button[type=submit]');
+        btnLoading($btn, true);
+
+        apiLogin($email.val().trim(), $password.val())
+          .then((res) => {
+            setSession(res.token, res.user);
+            goHome();
+          })
+          .catch((err) => {
+            btnLoading($btn, false);
+            if (err.status === 403) {
+              $('#verify-hint').removeClass('hidden');
+            }
+            showToast(err.message, 'error');
+          });
+      });
+    });
+  </script>
+</body>
+</html>

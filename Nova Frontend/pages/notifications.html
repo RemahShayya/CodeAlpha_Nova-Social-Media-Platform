@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications · Nova</title>
+  <link rel="icon" href="../assets/nova-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+  <header id="app-navbar"></header>
+
+  <main class="main-content page-root">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: var(--space-6);">
+      <h1 class="page-title" style="margin-bottom:0">Notifications</h1>
+      <button id="mark-all" class="btn btn-ghost btn-sm">Mark all as read</button>
+    </div>
+
+    <div id="notifications-list"></div>
+    <div class="load-more-wrap">
+      <button id="load-more" class="btn btn-secondary" style="display:none">Load more</button>
+    </div>
+  </main>
+
+  <div id="app-bottomnav"></div>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script>
+    $(() => {
+      // Notifications are user-only — admins have none.
+      if (!requireUser()) return;
+      renderNavbar('notifications');
+      initNotificationHandlers();
+
+      const $list = $('#notifications-list');
+      const $loadMore = $('#load-more');
+      let page = 0, total = 0, pageSize = 20, loading = false;
+
+      const loadNext = () => {
+        if (loading) return;
+        loading = true;
+        const next = page + 1;
+        if (next === 1) showSkeletonCards($list, 4, 'user');
+        btnLoading($loadMore, true);
+
+        apiGetNotifications(next, 20)
+          .then((res) => {
+            if (next === 1) $list.empty();
+            page = res.page; total = res.total; pageSize = res.pageSize;
+
+            if (total === 0) {
+              $list.html(emptyStateHtml('🔔', 'No notifications yet',
+                'When people follow you or interact with your posts, it shows up here.'));
+              $loadMore.hide();
+              $('#mark-all').hide();
+              return;
+            }
+
+            res.notifications.forEach((n) => $list.append(renderNotification(n)));
+            $loadMore.toggle(page * pageSize < total);
+          })
+          .catch((err) => {
+            if (next === 1) $list.empty();
+            showToast(err.message, 'error');
+          })
+          .finally(() => { loading = false; btnLoading($loadMore, false); });
+      };
+
+      loadNext();
+      $loadMore.on('click', loadNext);
+
+      $('#mark-all').on('click', function () {
+        const $btn = $(this);
+        btnLoading($btn, true);
+        apiMarkAllNotificationsRead()
+          .then(() => {
+            $list.find('.notification-card').removeClass('unread').find('.unread-dot').remove();
+            $('#unread-badge').addClass('hidden');
+            showToast('All notifications marked as read.', 'success');
+          })
+          .catch((err) => showToast(err.message, 'error'))
+          .finally(() => btnLoading($btn, false));
+      });
+    });
+  </script>
+</body>
+</html>

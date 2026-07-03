@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comments · Nova Admin</title>
+  <link rel="icon" href="../../assets/nova-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/variables.css">
+  <link rel="stylesheet" href="../../css/base.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <link rel="stylesheet" href="../../css/layout.css">
+  <link rel="stylesheet" href="../../css/pages.css">
+  <link rel="stylesheet" href="../../css/responsive.css">
+</head>
+<body>
+  <header id="app-navbar"></header>
+
+  <main class="main-content wide page-root">
+    <h1 class="page-title">Comment moderation</h1>
+    <div id="admin-tabs"></div>
+
+    <!-- The backend has no "list all comments" endpoint — comments are
+         moderated from their post's page, where admins get a Remove
+         button on every comment. This page routes you to the right post. -->
+    <div class="card" style="margin-bottom: var(--space-5);">
+      <h3 style="margin-bottom: var(--space-2);">How it works</h3>
+      <p class="text-muted" style="font-size: var(--font-size-sm);">
+        Comments are moderated from the post they belong to. Find the post below
+        (or open it by ID), then use the <b>Remove</b> button that appears on every
+        comment when you're signed in as an admin.
+      </p>
+    </div>
+
+    <div class="card" style="margin-bottom: var(--space-5);">
+      <h3 style="margin-bottom: var(--space-3);">Open a post by ID</h3>
+      <form id="open-post-form" novalidate style="display:flex; gap: var(--space-3); flex-wrap: wrap;">
+        <input type="text" id="post-id" placeholder="Post ID (UUID)" style="flex:1; min-width: 260px;">
+        <button type="submit" class="btn btn-primary">Open post</button>
+      </form>
+    </div>
+
+    <div class="search-bar-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="post-search" placeholder="…or search posts by caption" autocomplete="off">
+    </div>
+    <div id="posts-container"></div>
+  </main>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="../../js/config.js"></script>
+  <script src="../../js/auth.js"></script>
+  <script src="../../js/utils.js"></script>
+  <script src="../../js/ui.js"></script>
+  <script src="../../js/api.js"></script>
+  <script src="../../js/admin.js"></script>
+  <script>
+    $(() => {
+      if (!requireAdmin()) return;
+      renderAdminNav('comments');
+      initAdminHandlers();
+
+      $('#open-post-form').on('submit', function (e) {
+        e.preventDefault();
+        const id = $('#post-id').val().trim();
+        if (!id) { showToast('Enter a post ID.', 'error'); return; }
+        window.location.href = '../post.html?id=' + encodeURIComponent(id);
+      });
+
+      const $results = $('#posts-container');
+      $('#post-search').on('input', debounce(() => {
+        const q = $('#post-search').val().trim();
+        if (!q) { $results.empty(); return; }
+        showSkeletonCards($results, 2, 'user');
+        apiSearchPosts(q, 1, 10)
+          .then((res) => {
+            if (res.total === 0) {
+              $results.html(emptyStateHtml('🕳️', 'No posts found', ''));
+              return;
+            }
+            $results.empty();
+            res.posts.forEach((p) => $results.append(renderAdminPostRow(p)));
+          })
+          .catch((err) => { $results.empty(); showToast(err.message, 'error'); });
+      }, 400));
+    });
+  </script>
+</body>
+</html>

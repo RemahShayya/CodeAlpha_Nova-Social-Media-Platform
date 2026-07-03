@@ -1,0 +1,96 @@
+/* ============================================================
+   Nova — Layout: navbar, bottom nav, content shells
+   ============================================================ */
+
+/* ---------- Top navbar ---------- */
+.navbar {
+  position: fixed;          /* was: sticky */
+  top: 0; left: 0; right: 0;
+  z-index: 800;
+  height: var(--nav-height);
+  background: rgba(10, 10, 28, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-border);
+  transform: translateY(0);
+  transition: transform var(--transition-base);
+}
+.navbar.nav-hidden { transform: translateY(-100%); }
+body { padding-top: var(--nav-height); }
+.navbar-inner {
+  max-width: 1100px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 var(--space-5);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--font-size-xl);
+  color: var(--color-text);
+}
+.nav-brand img { width: 36px; height: 36px; border-radius: var(--radius-sm); }
+.nav-brand:hover { color: var(--color-text); }
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.nav-icon-btn {
+  position: relative;
+  width: 42px; height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  color: var(--color-text-muted);
+  font-size: 1.25rem;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+.nav-icon-btn:hover, .nav-icon-btn.active {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+.nav-avatar { cursor: pointer; }
+
+/* ---------- Bottom navigation (mobile) ---------- */
+.bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: var(--bottomnav-height);
+  background: rgba(10, 10, 28, 0.92);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--color-border);
+  z-index: 800;
+}
+.bottom-nav-inner {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+.bottom-nav .nav-icon-btn { width: 48px; height: 48px; }
+
+/* ---------- Main content ---------- */
+.main-content {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4) var(--space-16);
+}
+.main-content.wide { max-width: 900px; }
+
+.page-title {
+  font-size: var(--font-size-2xl);
+  margin-bottom: var(--space-6);
+}
+
+/* Load more */
+.load-more-wrap { text-align: center; padding: var(--space-6) 0; }
