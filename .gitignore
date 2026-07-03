@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Dependencies
 node_modules/
 
@@ -21,3 +22,10 @@ Thumbs.db
 # Editor
 .vscode/
 .idea/
+=======
+node_modules
+.env
+db.js
+config
+config.js
+>>>>>>> 9f32a3765b4c6e6dbd3dfb683185782a59ba67bc
