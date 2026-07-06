@@ -1,8 +1,3 @@
-/* ============================================================
-   Nova — notifications: render + mark-as-read + navigation.
-   Depends on: api.js, ui.js, utils.js, auth.js
-   ============================================================ */
-
 const notificationText = (n) => {
   const actor = '<b>' + escapeHtml(n.Actor ? n.Actor.name : 'Someone') + '</b>';
   if (n.type === 'follow') return actor + ' started following you';
@@ -10,13 +5,11 @@ const notificationText = (n) => {
   if (n.type === 'comment') return actor + ' commented on your post';
   return actor + ' interacted with you';
 };
-
 const notificationTarget = (n) => {
   if ((n.type === 'like' || n.type === 'comment') && n.postId) return 'post.html?id=' + n.postId;
   if (n.type === 'follow' && n.actorId) return 'profile.html?id=' + n.actorId;
   return null;
 };
-
 const renderNotification = (n) => {
   return (
     '<div class="notification-card' + (n.isRead ? '' : ' unread') + '" data-notification-id="' + n.id + '" data-target="' + (notificationTarget(n) || '') + '">' +
@@ -28,22 +21,19 @@ const renderNotification = (n) => {
     '</div>'
   );
 };
-
-/* Delegated: click marks as read then navigates. */
 const initNotificationHandlers = () => {
   $(document).on('click', '.notification-card', function () {
     const $card = $(this);
     const id = $card.data('notification-id');
     const target = $card.data('target');
     const go = () => { if (target) window.location.href = target; };
-
     if ($card.hasClass('unread')) {
       apiMarkNotificationRead(id)
         .then(() => {
           $card.removeClass('unread').find('.unread-dot').remove();
           go();
         })
-        .catch(() => go()); // navigation matters more than the flag
+        .catch(() => go());
     } else {
       go();
     }

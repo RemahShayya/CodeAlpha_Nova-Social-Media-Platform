@@ -1,13 +1,7 @@
-/* ============================================================
-   Nova — comments: render, create, inline edit, delete.
-   Depends on: api.js, ui.js, utils.js, auth.js
-   ============================================================ */
-
 const renderComment = (comment) => {
   const author = comment.User || { id: comment.userId, name: 'User', profilePicture: null };
   const own = isOwnContent(author.id);
   const admin = isAdmin();
-
   let actions = '';
   if (own && isUser()) {
     actions =
@@ -21,7 +15,6 @@ const renderComment = (comment) => {
         '<button class="comment-admin-delete danger">Remove</button>' +
       '</div>';
   }
-
   return (
     '<div class="comment-card" data-comment-id="' + comment.id + '">' +
       '<a href="profile.html?id=' + author.id + '">' +
@@ -38,7 +31,6 @@ const renderComment = (comment) => {
     '</div>'
   );
 };
-
 const loadComments = (postId, $container) => {
   return apiGetComments(postId).then((comments) => {
     if (!comments.length) {
@@ -52,10 +44,7 @@ const loadComments = (postId, $container) => {
     throw err;
   });
 };
-
-/* Delegated handlers — bind once via initCommentHandlers(postId, $list, onCountChange) */
 const initCommentHandlers = (postId, $list, onCountChange) => {
-  // Owner delete
   $(document).on('click', '.comment-delete', function () {
     const $card = $(this).closest('.comment-card');
     confirmDialog('Delete comment', 'This comment will be permanently removed.', 'Delete', () => {
@@ -71,8 +60,6 @@ const initCommentHandlers = (postId, $list, onCountChange) => {
         .catch((err) => showToast(err.message, 'error'));
     });
   });
-
-  // Admin remove
   $(document).on('click', '.comment-admin-delete', function () {
     const $card = $(this).closest('.comment-card');
     confirmDialog('Remove comment', 'Remove this comment as an administrator?', 'Remove', () => {
@@ -88,14 +75,11 @@ const initCommentHandlers = (postId, $list, onCountChange) => {
         .catch((err) => showToast(err.message, 'error'));
     });
   });
-
-  // Inline edit: swap content for a textarea + save/cancel
   $(document).on('click', '.comment-edit', function () {
     const $card = $(this).closest('.comment-card');
     if ($card.find('.comment-edit-form').length) return;
     const $content = $card.find('.comment-content');
     const original = $content.text();
-
     $content.hide();
     $card.find('.comment-actions').hide();
     $content.after(
@@ -110,9 +94,7 @@ const initCommentHandlers = (postId, $list, onCountChange) => {
     );
     const $form = $card.find('.comment-edit-form');
     bindCharCounter($form.find('textarea'), $form.find('.char-counter'), 500);
-
     const restore = () => { $form.remove(); $content.show(); $card.find('.comment-actions').show(); };
-
     $form.find('.comment-cancel').on('click', restore);
     $form.find('.comment-save').on('click', function () {
       const content = $form.find('textarea').val().trim();

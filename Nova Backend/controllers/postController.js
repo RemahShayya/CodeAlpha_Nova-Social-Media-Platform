@@ -1,34 +1,23 @@
 import * as postService from '../services/postService.js';
 import { deriveMediaType } from '../middlewares/postUploads.js';
-
-// ─── create ──────────────────────────────────────────────────────────────────
-
 export const createPost = async (req, res, next) => {
   try {
-    // Media is required — multer's fileFilter already restricts mimetypes,
-    // but req.file being absent means no file was sent at all.
     if (!req.file) {
       return res.status(400).json({ message: 'Post media is required.' });
     }
-
     const mediaType = deriveMediaType(req.file.mimetype);
     const { caption } = req.body;
-
     const result = await postService.createPost(req.user.id, {
       caption,
       mediaUrl: req.file.path,
       mediaType,
     });
-
     if (result.error) return res.status(result.status).json({ message: result.error });
     res.status(201).json( result.data );
   } catch (err) {
     next(err);
   }
 };
-
-// ─── feed ────────────────────────────────────────────────────────────────────
-
 export const getFeed = async (req, res, next) => {
   try {
     const { page, pageSize } = req.query;
@@ -39,9 +28,6 @@ export const getFeed = async (req, res, next) => {
     next(err);
   }
 };
-
-// ─── single post ─────────────────────────────────────────────────────────────
-
 export const getPostById = async (req, res, next) => {
   try {
     const result = await postService.getPostById(req.user.id, req.params.id);
@@ -51,9 +37,6 @@ export const getPostById = async (req, res, next) => {
     next(err);
   }
 };
-
-// ─── update ──────────────────────────────────────────────────────────────────
-
 export const updatePost = async (req, res, next) => {
   try {
     const { caption } = req.body;
@@ -64,9 +47,6 @@ export const updatePost = async (req, res, next) => {
     next(err);
   }
 };
-
-// ─── delete ──────────────────────────────────────────────────────────────────
-
 export const deletePost = async (req, res, next) => {
   try {
     const result = await postService.deletePost(req.user.id, req.params.id);
@@ -76,9 +56,6 @@ export const deletePost = async (req, res, next) => {
     next(err);
   }
 };
-
-// ─── a specific user's posts ───────────────────────────────────────────────────
-
 export const getUserPosts = async (req, res, next) => {
   try {
     const { page, pageSize } = req.query;
@@ -89,7 +66,6 @@ export const getUserPosts = async (req, res, next) => {
     next(err);
   }
 };
-
 export const searchPosts = async (req, res, next) => {
   try {
     const { q, page, pageSize } = req.query;

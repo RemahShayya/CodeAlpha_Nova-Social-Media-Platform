@@ -1,12 +1,8 @@
 import Mailjet from 'node-mailjet';
 import env from '../config/env.js';
-
 const mailjet = Mailjet.apiConnect(env.MAILJET_API_KEY, env.MAILJET_SECRET_KEY);
-
-
 export const sendVerificationEmail = async (toEmail, toName, token) => {
   const verificationUrl = `${env.APP_URL}/api/auth/verify-email?token=${token}`;
-
   try {
     const result = await mailjet.post('send', { version: 'v3.1' }).request({
       Messages: [
@@ -29,11 +25,8 @@ export const sendVerificationEmail = async (toEmail, toName, token) => {
     console.error('Mailjet error message:', JSON.stringify(err.response?.body ?? err.message));
   }
 };
-
-
 export const sendPasswordResetEmail = async (toEmail, toName, token) => {
   const resetUrl = `${env.APP_URL}/api/auth/reset-password?token=${token}`;
-
   await mailjet.post('send', { version: 'v3.1' }).request({
     Messages: [
       {

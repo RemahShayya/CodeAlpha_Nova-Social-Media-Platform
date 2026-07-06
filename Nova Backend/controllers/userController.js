@@ -1,6 +1,5 @@
 import * as userService from '../services/userService.js';
 
-// ─── profile ─────────────────────────────────────────────────────────────────
 
 export const getMe = async (req, res, next) => {
   try {
@@ -35,7 +34,6 @@ export const getUserById = async (req, res, next) => {
   }
 };
 
-// ─── follow / unfollow ───────────────────────────────────────────────────────
 
 export const followUser = async (req, res, next) => {
   try {
@@ -57,7 +55,6 @@ export const unfollowUser = async (req, res, next) => {
   }
 };
 
-// ─── block / unblock ─────────────────────────────────────────────────────────
 
 export const blockUser = async (req, res, next) => {
   try {
@@ -79,7 +76,6 @@ export const unblockUser = async (req, res, next) => {
   }
 };
 
-// ─── followers / following lists ─────────────────────────────────────────────
 
 export const getFollowers = async (req, res, next) => {
   try {

@@ -1,9 +1,3 @@
-/* ============================================================
-   Nova — shared UI: toasts, modals, spinners, skeletons,
-   empty states, and the app navbar.
-   ============================================================ */
-
-/* ---------- Toast ---------- */
 const showToast = (message, type = "info") => {
   if (!$("#toast-container").length)
     $("body").append('<div id="toast-container"></div>');
@@ -20,8 +14,6 @@ const showToast = (message, type = "info") => {
     setTimeout(() => $toast.remove(), 300);
   }, 3000);
 };
-
-/* ---------- Modal / confirmation dialog ---------- */
 const showModal = (
   title,
   bodyHTML,
@@ -56,7 +48,6 @@ const showModal = (
       "</div>",
   );
   $("body").append($backdrop);
-
   $backdrop.on("click", (e) => {
     if (e.target === $backdrop[0]) closeModal();
   });
@@ -68,9 +59,7 @@ const showModal = (
   }
   return $backdrop;
 };
-
 const closeModal = () => $("#app-modal").remove();
-
 const confirmDialog = (title, message, confirmText, onConfirm) =>
   showModal(
     title,
@@ -82,8 +71,6 @@ const confirmDialog = (title, message, confirmText, onConfirm) =>
     },
     "btn-danger",
   );
-
-/* ---------- Full-page spinner ---------- */
 const showSpinner = () => {
   if (!$("#spinner-overlay").length) {
     $("body").append(
@@ -92,8 +79,6 @@ const showSpinner = () => {
   }
 };
 const hideSpinner = () => $("#spinner-overlay").remove();
-
-/* Button-level loading state */
 const btnLoading = ($btn, loading) => {
   if (loading) {
     if (!$btn.find(".btn-spinner").length) {
@@ -106,8 +91,6 @@ const btnLoading = ($btn, loading) => {
     $btn.removeClass("loading").prop("disabled", false);
   }
 };
-
-/* ---------- Skeletons ---------- */
 const skeletonPostCard = () =>
   '<div class="skeleton-card">' +
   '<div class="skeleton-row">' +
@@ -116,7 +99,6 @@ const skeletonPostCard = () =>
   "</div>" +
   '<div class="skeleton skeleton-block"></div>' +
   "</div>";
-
 const skeletonUserRow = () =>
   '<div class="skeleton-card">' +
   '<div class="skeleton-row" style="margin-bottom:0">' +
@@ -124,18 +106,14 @@ const skeletonUserRow = () =>
   '<div class="skeleton skeleton-line"></div>' +
   "</div>" +
   "</div>";
-
 const showSkeletonCards = ($container, count = 3, kind = "post") => {
   const tpl = kind === "user" ? skeletonUserRow : skeletonPostCard;
   let html = "";
   for (let i = 0; i < count; i++) html += tpl();
   $container.html('<div class="skeleton-group">' + html + "</div>");
 };
-
 const hideSkeletons = ($container) =>
   $container.find(".skeleton-group").remove();
-
-/* ---------- Empty state ---------- */
 const emptyStateHtml = (icon, title, subtitle, ctaHtml = "") =>
   '<div class="empty-state">' +
   '<div class="empty-icon">' +
@@ -147,7 +125,6 @@ const emptyStateHtml = (icon, title, subtitle, ctaHtml = "") =>
   (subtitle ? "<p>" + escapeHtml(subtitle) + "</p>" : "") +
   ctaHtml +
   "</div>";
-
 /* ---------- Navbar ----------
    Rendered into <header id="app-navbar"></header> on every
    in-app page. Role-aware: admins get the admin panel link
@@ -155,11 +132,9 @@ const emptyStateHtml = (icon, title, subtitle, ctaHtml = "") =>
 const renderNavbar = (activePage = "") => {
   const $host = $("#app-navbar");
   if (!$host.length) return;
-
   const user = getUser();
   const admin = isAdmin();
   const act = (p) => (p === activePage ? " active" : "");
-
   const socialIcons = admin
     ? ""
     : '<a href="feed.html" class="nav-icon-btn' +
@@ -174,11 +149,9 @@ const renderNavbar = (activePage = "") => {
       '<a href="notifications.html" class="nav-icon-btn' +
       act("notifications") +
       '" title="Notifications" aria-label="Notifications">♡<span class="badge hidden" id="unread-badge"></span></a>';
-
   const adminLink = admin
     ? '<a href="admin/dashboard.html" class="btn btn-secondary btn-sm">Admin panel</a>'
     : "";
-
   $host.html(
     '<nav class="navbar"><div class="navbar-inner">' +
       '<a href="' +
@@ -209,8 +182,6 @@ const renderNavbar = (activePage = "") => {
       "</div>" +
       "</div></nav>",
   );
-
-  // Mobile bottom nav — users only (admins use the panel link).
   if (!admin && $("#app-bottomnav").length) {
     $("#app-bottomnav").html(
       '<nav class="bottom-nav"><div class="bottom-nav-inner">' +
@@ -236,15 +207,12 @@ const renderNavbar = (activePage = "") => {
         "</div></nav>",
     );
   }
-
   $("#nav-avatar-btn").on("click", (e) => {
     e.stopPropagation();
     $("#nav-dropdown").toggleClass("open");
   });
   $(document).on("click", () => $("#nav-dropdown").removeClass("open"));
   $("#nav-logout").on("click", logout);
-
-  // Unread badge — users only.
   if (!admin && isLoggedIn()) {
     apiGetUnreadCount()
       .then((res) => {
@@ -255,17 +223,13 @@ const renderNavbar = (activePage = "") => {
             .removeClass("hidden");
       })
       .catch(() => {
-        /* non-critical */
       });
   }
   initAutoHideNav();
 };
-
-/* Auto-hide navbar: hide on scroll down, reveal instantly on scroll up. */
 const initAutoHideNav = () => {
   let lastY = window.scrollY;
   let ticking = false;
-
   $(window).on("scroll", () => {
     if (ticking) return;
     ticking = true;
@@ -273,9 +237,9 @@ const initAutoHideNav = () => {
       const y = window.scrollY;
       const $nav = $(".navbar");
       if (y > lastY && y > 80) {
-        $nav.addClass("nav-hidden"); // scrolling down, past the top
+        $nav.addClass("nav-hidden");
       } else if (y < lastY) {
-        $nav.removeClass("nav-hidden"); // any upward scroll → show immediately
+        $nav.removeClass("nav-hidden");
       }
       lastY = y;
       ticking = false;

@@ -13,6 +13,7 @@ import errorHandler from "./middlewares/errorHandler.js";
 import notificationRoutes from './routes/notificationRoutes.js';
 import cors from "cors";
 import path from 'path';
+import { globalLimiter } from './middlewares/rateLimiterMiddleware.js';
 import { fileURLToPath } from 'url';
 
 
@@ -23,6 +24,7 @@ const PORT = env.PORT;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/api', globalLimiter);
 
 try {
   await sequelize.authenticate();

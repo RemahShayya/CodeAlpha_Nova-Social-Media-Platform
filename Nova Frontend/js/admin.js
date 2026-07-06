@@ -1,22 +1,10 @@
-/* ============================================================
-   Nova — admin: navbar, renderers, and moderation handlers.
-   Admin pages live at /pages/admin/, one level deeper than the
-   social pages — every relative path here accounts for that.
-   Depends on: api.js, ui.js, utils.js, auth.js
-   ============================================================ */
-
-// Avatar/media helpers with admin-depth relative fallback.
 const adminAvatarUrl = (profilePicture) =>
   profilePicture ? mediaUrl(profilePicture) : '../../assets/default-avatar.svg';
-
-/* Admin navbar + tab bar. active: 'dashboard'|'users'|'posts'|'comments'|'create-admin' */
 const renderAdminNav = (active) => {
   const $host = $('#app-navbar');
   if (!$host.length) return;
-
   const tab = (file, label) =>
     '<a href="' + file + '" class="tab' + (active === file.replace('.html', '') ? ' active' : '') + '">' + label + '</a>';
-
   $host.html(
     '<nav class="navbar"><div class="navbar-inner">' +
       '<a href="dashboard.html" class="nav-brand">' +
@@ -27,9 +15,7 @@ const renderAdminNav = (active) => {
       '</div>' +
     '</div></nav>'
   );
-
   $('#admin-logout').on('click', logout);
-
   const $tabs = $('#admin-tabs');
   if ($tabs.length) {
     $tabs.html(
@@ -43,8 +29,6 @@ const renderAdminNav = (active) => {
     );
   }
 };
-
-/* ---------- Admin user row ---------- */
 const renderAdminUserRow = (user) => {
   return (
     '<div class="card user-card" data-user-id="' + user.id + '">' +
@@ -58,14 +42,11 @@ const renderAdminUserRow = (user) => {
     '</div>'
   );
 };
-
-/* ---------- Admin post row ---------- */
 const renderAdminPostRow = (post) => {
   const author = post.User || post.user || { name: 'User' };
   const thumb = post.mediaType === 'video'
     ? '<video src="' + mediaUrl(post.mediaUrl) + '" preload="metadata" muted style="width:72px;height:72px;object-fit:cover;border-radius:var(--radius-sm);"></video>'
     : '<img src="' + mediaUrl(post.mediaUrl) + '" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:var(--radius-sm);">';
-
   return (
     '<div class="card user-card" data-post-id="' + post.id + '">' +
       thumb +
@@ -77,10 +58,7 @@ const renderAdminPostRow = (post) => {
     '</div>'
   );
 };
-
-/* ---------- Delegated admin handlers — bind once ---------- */
 const initAdminHandlers = () => {
-  // Deactivate user (soft delete)
   $(document).on('click', '.admin-deactivate', function () {
     const $row = $(this).closest('[data-user-id]');
     const userId = $row.data('user-id');
@@ -92,8 +70,6 @@ const initAdminHandlers = () => {
           .catch((err) => showToast(err.message, 'error'));
       });
   });
-
-  // Remove post
   $(document).on('click', '.admin-remove-post', function () {
     const $row = $(this).closest('[data-post-id]');
     confirmDialog('Remove post', 'The post and its media file will be permanently deleted.', 'Remove', () => {

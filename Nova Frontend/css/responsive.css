@@ -1,13 +1,6 @@
-/* ============================================================
-   Nova — Responsive (mobile-first)
-   Base styles serve 0–599px.
-   ============================================================ */
-
-/* ---------- Mobile (default) ---------- */
 @media (max-width: 599px) {
   :root { --font-size-3xl: 1.75rem; --font-size-2xl: 1.4rem; }
 
-  /* Bottom nav replaces top-nav icons on phones */
   .bottom-nav { display: block; }
   .navbar .nav-actions .nav-icon-btn:not(.nav-avatar):not(.always-visible) { display: none; }
 
@@ -20,17 +13,14 @@
   .toast { max-width: none; }
 }
 
-/* ---------- Tablet ---------- */
 @media (min-width: 600px) {
   .bottom-nav { display: none; }
 }
 
-/* ---------- Desktop ---------- */
 @media (min-width: 1024px) {
   .main-content { padding-top: var(--space-8); }
 }
 
-/* Touch target floor */
 @media (pointer: coarse) {
   .btn, .nav-icon-btn, .dropdown-item { min-height: 44px; }
 }
