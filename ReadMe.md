@@ -1,3 +1,4 @@
+<div align="center">
 # 🌌 Nova — Social Media Platform
 
 **Connect. Share. Inspire.**
