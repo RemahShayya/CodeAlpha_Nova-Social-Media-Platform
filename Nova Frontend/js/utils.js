@@ -11,7 +11,9 @@ const formatDate = (timestamp) => {
 };
 const mediaUrl = (path) => {
   if (!path) return '';
-  return BASE_URL + '/' + String(path).replace(/\\/g, '/');
+  const p = String(path).replace(/\\/g, '/');
+  if (/^https?:\/\//i.test(p)) return p;
+  return BASE_URL + '/' + p;
 };
 const avatarUrl = (profilePicture) => {
   return profilePicture ? mediaUrl(profilePicture) : '../assets/default-avatar.svg';

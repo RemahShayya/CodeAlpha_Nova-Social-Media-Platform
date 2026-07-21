@@ -35,6 +35,10 @@ const envSchema = z.object({
   APP_URL: z.string().url(),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(900000),
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
+  CLIENT_URL: z.string().url().default("http://127.0.0.1:5500"),
+  SUPABASE_URL: z.string().url(),
+  SUPABASE_SERVICE_KEY: z.string().min(1),
+  SUPABASE_BUCKET: z.string().min(1).default("media"),
   AUTH_RATE_LIMIT_WINDOW_MS: z.coerce
     .number()
     .int()

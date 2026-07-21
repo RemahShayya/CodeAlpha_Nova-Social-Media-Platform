@@ -23,7 +23,6 @@ const PORT = env.PORT;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api', globalLimiter);
 
 try {
@@ -34,8 +33,8 @@ try {
 }
 
 app.use(cors({
-    origin: "http://127.0.0.1:5500",
-    credentials: true
+  origin: env.CLIENT_URL,
+  credentials: true
 }));
 
 app.use(express.json());
@@ -58,6 +57,6 @@ app.use(notFound);
 //Register Error Handl  er
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server is running on port ${PORT}`);
 });

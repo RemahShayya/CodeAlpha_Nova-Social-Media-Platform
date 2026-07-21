@@ -13,6 +13,10 @@ const sequelize = new Sequelize(env.DB_NAME, env.DB_USER, env.DB_PASSWORD, {
   host: env.DB_HOST,
   port: env.DB_PORT,
   dialect: 'postgres',
+  dialectOptions:
+    env.DB_HOST === 'localhost' || env.DB_HOST === '127.0.0.1'
+      ? {}
+      : { ssl: { require: true, rejectUnauthorized: false } },
   logging: env.NODE_ENV === 'development' ? console.log : false,
 });
 

@@ -1,31 +1,12 @@
-<<<<<<< HEAD
-# Dependencies
 node_modules/
-
-# Secrets — never commit
 .env
 .env.*
 !.env.example
-
-# User-uploaded content (media, profile pictures)
-backend/uploads/
-
-# Logs
+uploads/
 logs/
 *.log
 npm-debug.log*
-
-# OS junk
 .DS_Store
 Thumbs.db
-
-# Editor
 .vscode/
 .idea/
-=======
-node_modules
-.env
-db.js
-config
-config.js
->>>>>>> 9f32a3765b4c6e6dbd3dfb683185782a59ba67bc

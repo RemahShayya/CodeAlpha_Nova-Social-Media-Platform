@@ -1,11 +1,7 @@
 import multer from 'multer';
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/posts/'),
-  filename: (req, file, cb) => {
-    const ext = file.originalname.split('.').pop();
-    cb(null, `${req.user.id}-${Date.now()}.${ext}`);
-  },
-});
+import supabaseStorage from './supabaseStorage.js';
+
+const storage = supabaseStorage({ folder: 'posts' });
 const fileFilter = (req, file, cb) => {
   const allowed = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/quicktime'];
   if (allowed.includes(file.mimetype)) {
